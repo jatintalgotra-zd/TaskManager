@@ -21,8 +21,8 @@ func NewTaskManager() *TaskManager {
 // Task struct
 // added fields for description and status.
 type Task struct {
-	Desc   string
-	Status bool
+	Desc   string `json:"desc"`
+	Status bool   `json:"status"`
 }
 
 // GenID () func() int

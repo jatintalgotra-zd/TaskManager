@@ -4,7 +4,6 @@ on:
   pull_request:
     branches: [ "main" ]
 
-
 jobs:
   lint_and_build:
     name : lint and build

@@ -68,14 +68,21 @@ func (h *Handler) PostTask(w http.ResponseWriter, req *http.Request) {
 	if req.Method != http.MethodPost {
 		w.WriteHeader(http.StatusMethodNotAllowed)
 	} else {
-		desc, err := io.ReadAll(req.Body)
+		tBytes, err := io.ReadAll(req.Body)
 		if err != nil {
 			w.WriteHeader(http.StatusBadRequest)
 			return
 		}
 
-		task := string(desc)
-		h.tm.AddTask(task)
+		var task Task
+
+		err2 := json.Unmarshal(tBytes, &task)
+		if err2 != nil {
+			w.WriteHeader(http.StatusBadRequest)
+			return
+		}
+
+		h.tm.AddTask(task.Desc)
 		w.WriteHeader(http.StatusCreated)
 	}
 }
