@@ -32,9 +32,3 @@ func TestHandler_GetAll(t *testing.T) {
 		t.Errorf("Expected %v but got %v", 200, res.StatusCode)
 	}
 }
-
-//func TestHandler_PostTask(t *testing.T) {
-//	tm := NewTaskManager()
-//	h := NewHandler(tm)
-//
-//}
