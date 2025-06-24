@@ -5,7 +5,7 @@ TaskManager/controller.go:19.34,21.3 1 1
 TaskManager/controller.go:21.8,25.17 3 1
 TaskManager/controller.go:25.17,28.4 2 0
 TaskManager/controller.go:30.3,31.18 2 1
-TaskManager/controller.go:31.18,33.4 1 0
+TaskManager/controller.go:31.18,33.4 1 1
 TaskManager/controller.go:37.69,38.34 1 1
 TaskManager/controller.go:38.34,41.3 2 1
 TaskManager/controller.go:43.2,46.16 3 1
@@ -15,7 +15,7 @@ TaskManager/controller.go:52.17,55.3 2 1
 TaskManager/controller.go:57.2,58.17 2 1
 TaskManager/controller.go:58.17,61.3 2 0
 TaskManager/controller.go:63.2,64.17 2 1
-TaskManager/controller.go:64.17,66.3 1 0
+TaskManager/controller.go:64.17,66.3 1 1
 TaskManager/controller.go:69.70,70.35 1 1
 TaskManager/controller.go:70.35,72.3 1 1
 TaskManager/controller.go:72.8,74.17 2 1

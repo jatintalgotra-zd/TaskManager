@@ -9,6 +9,8 @@ import (
 	"testing"
 )
 
+var errTest = errors.New("test error")
+
 func TestHandler_GetAll(t *testing.T) {
 	tm := NewTaskManager()
 	tm.AddTask("task 1")
@@ -52,21 +54,29 @@ func TestHandler_GetAll(t *testing.T) {
 	}
 
 	// testcase 3
-	//req3 := httptest.NewRequest(http.MethodGet, "/api/task", http.NoBody)
-	//res3 := errWriter(0)
-	//
-	//h.
+	req3 := httptest.NewRequest(http.MethodGet, "/api/task", http.NoBody)
+	res3 := errWriter{0}
+
+	h.GetAll(&res3, req3)
+
+	if res3.Code != http.StatusInternalServerError {
+		t.Errorf("Expected status %d but got %d", http.StatusInternalServerError, res3.Code)
+	}
 }
 
-type errWriter int
+type errWriter struct {
+	Code int
+}
 
-func (e errWriter) Header() http.Header {
+func (*errWriter) Header() http.Header {
 	return nil
 }
-func (e errWriter) Write(t []byte) (int, error) {
-	return 0, errors.New("test error")
+func (*errWriter) Write(_ []byte) (int, error) {
+	return 0, errTest
 }
-func (e errWriter) WriteHeader(statusCode int) {}
+func (e *errWriter) WriteHeader(statusCode int) {
+	e.Code = statusCode
+}
 
 func TestHandler_GetByID(t *testing.T) {
 	tm := NewTaskManager()
@@ -144,6 +154,18 @@ func TestHandler_GetByID(t *testing.T) {
 	if res5.Code != http.StatusBadRequest {
 		t.Errorf("Expected %d got %d", http.StatusBadRequest, res5.Code)
 	}
+
+	// testcase 6
+	req6 := httptest.NewRequest(http.MethodGet, "/api/task/1", http.NoBody)
+	res6 := errWriter{0}
+
+	req6.SetPathValue("id", "2")
+
+	h.GetByID(&res6, req6)
+
+	if res6.Code != http.StatusInternalServerError {
+		t.Errorf("Expected status %d but got %d", http.StatusInternalServerError, res6.Code)
+	}
 }
 
 func TestHandler_PostTask(t *testing.T) {
@@ -187,12 +209,12 @@ func TestHandler_PostTask(t *testing.T) {
 	}{
 		{
 			id:     1,
-			name:   "jatin",
+			name:   "jack",
 			height: 5.7,
 		},
 		{
 			id:     2,
-			name:   "jatin2",
+			name:   "jack2",
 			height: 6.7,
 		},
 	}
@@ -226,8 +248,8 @@ func TestHandler_PostTask(t *testing.T) {
 
 type errReader int
 
-func (errReader) Read(p []byte) (n int, err error) {
-	return 0, errors.New("test error")
+func (errReader) Read(_ []byte) (n int, err error) {
+	return 0, errTest
 }
 
 func TestHandler_PutTask(t *testing.T) {
