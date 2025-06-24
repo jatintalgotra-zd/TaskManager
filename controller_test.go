@@ -3,6 +3,7 @@ package main
 import (
 	"bytes"
 	"encoding/json"
+	"errors"
 	"net/http"
 	"net/http/httptest"
 	"testing"
@@ -49,7 +50,23 @@ func TestHandler_GetAll(t *testing.T) {
 	if tasks[0].Desc != "task 1" || tasks[1].Desc != "task 2" {
 		t.Errorf("Expected: task 1, task 2 got %s, %s", tasks[0].Desc, tasks[1].Desc)
 	}
+
+	// testcase 3
+	//req3 := httptest.NewRequest(http.MethodGet, "/api/task", http.NoBody)
+	//res3 := errWriter(0)
+	//
+	//h.
 }
+
+type errWriter int
+
+func (e errWriter) Header() http.Header {
+	return nil
+}
+func (e errWriter) Write(t []byte) (int, error) {
+	return 0, errors.New("test error")
+}
+func (e errWriter) WriteHeader(statusCode int) {}
 
 func TestHandler_GetByID(t *testing.T) {
 	tm := NewTaskManager()
@@ -89,6 +106,43 @@ func TestHandler_GetByID(t *testing.T) {
 
 	if task1.Desc != "task 1" {
 		t.Errorf("Expected: task 1 got %s", task1.Desc)
+	}
+
+	// testcase 3
+	tm.ListTasks()[0].Status = true
+	req3 := httptest.NewRequest(http.MethodGet, "/api/task/1", http.NoBody)
+	res3 := httptest.NewRecorder()
+
+	req3.SetPathValue("id", "1")
+
+	h.GetByID(res3, req3)
+
+	if res3.Code != http.StatusBadRequest {
+		t.Errorf("Expected %d got %d", http.StatusBadRequest, res3.Code)
+	}
+
+	// testcase 4
+	req4 := httptest.NewRequest(http.MethodGet, "/api/task/1", http.NoBody)
+	res4 := httptest.NewRecorder()
+
+	req4.SetPathValue("id", "abc")
+
+	h.GetByID(res4, req4)
+
+	if res4.Code != http.StatusBadRequest {
+		t.Errorf("Expected %d got %d", http.StatusBadRequest, res4.Code)
+	}
+
+	// testcase 5
+	req5 := httptest.NewRequest(http.MethodGet, "/api/task/1", http.NoBody)
+	res5 := httptest.NewRecorder()
+
+	req5.SetPathValue("id", "10")
+
+	h.GetByID(res5, req5)
+
+	if res5.Code != http.StatusBadRequest {
+		t.Errorf("Expected %d got %d", http.StatusBadRequest, res5.Code)
 	}
 }
 
@@ -158,6 +212,22 @@ func TestHandler_PostTask(t *testing.T) {
 	if res3.Code != http.StatusBadRequest {
 		t.Errorf("Expected %d got %d", http.StatusBadRequest, res2.Code)
 	}
+
+	// testcase 4
+	req4 := httptest.NewRequest(http.MethodPost, "/api/task", errReader(0))
+	res4 := httptest.NewRecorder()
+
+	h.PostTask(res4, req4)
+
+	if res4.Code != http.StatusBadRequest {
+		t.Errorf("Expected %d got %d", http.StatusBadRequest, res4.Code)
+	}
+}
+
+type errReader int
+
+func (errReader) Read(p []byte) (n int, err error) {
+	return 0, errors.New("test error")
 }
 
 func TestHandler_PutTask(t *testing.T) {
@@ -202,6 +272,18 @@ func TestHandler_PutTask(t *testing.T) {
 
 	if !tm.ListTasks()[0].Status {
 		t.Errorf("Expected status true got %v", tm.ListTasks()[1].Status)
+	}
+
+	// testcase 4
+	req4 := httptest.NewRequest(http.MethodPut, "/api/task/1", http.NoBody)
+	res4 := httptest.NewRecorder()
+
+	req4.SetPathValue("id", "3")
+
+	h.PutTask(res4, req4)
+
+	if res4.Code != http.StatusBadRequest {
+		t.Errorf("Expected %d got %d", http.StatusBadRequest, res4.Code)
 	}
 }
 

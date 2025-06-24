@@ -83,15 +83,19 @@ func (t *TaskManager) DeleteTaskByID(id int) error {
 
 // CompleteTask (int)
 // marks Task complete by id.
-func (t *TaskManager) CompleteTask(id int) {
+func (t *TaskManager) CompleteTask(id int) error {
 	idx := id - 1
 	if idx >= 0 && idx < len(t.tasks) {
 		fmt.Println("Marking task", id, "as completed...")
 
 		(t.tasks)[idx].Status = true
-	} else {
-		fmt.Println("Invalid task ID for Complete method")
+
+		return nil
 	}
+
+	fmt.Println("Invalid task ID for Complete method")
+
+	return ErrInvalid
 }
 
 func main() {

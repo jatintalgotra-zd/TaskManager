@@ -37,6 +37,7 @@ func (h *Handler) GetAll(w http.ResponseWriter, req *http.Request) {
 func (h *Handler) GetByID(w http.ResponseWriter, req *http.Request) {
 	if req.Method != http.MethodGet {
 		w.WriteHeader(http.StatusMethodNotAllowed)
+		return
 	}
 
 	id := req.PathValue("id")
@@ -44,6 +45,7 @@ func (h *Handler) GetByID(w http.ResponseWriter, req *http.Request) {
 	idInt, err := strconv.ParseInt(id, 10, 64)
 	if err != nil {
 		w.WriteHeader(http.StatusBadRequest)
+		return
 	}
 
 	task, err2 := h.tm.ListTaskByID(int(idInt))
@@ -101,7 +103,12 @@ func (h *Handler) PutTask(w http.ResponseWriter, req *http.Request) {
 		return
 	}
 
-	h.tm.CompleteTask(int(idInt))
+	err2 := h.tm.CompleteTask(int(idInt))
+	if err2 != nil {
+		w.WriteHeader(http.StatusBadRequest)
+		return
+	}
+
 	w.WriteHeader(http.StatusOK)
 }
 
