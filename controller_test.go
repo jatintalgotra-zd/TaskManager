@@ -18,7 +18,7 @@ func TestHandler_GetAll(t *testing.T) {
 
 	h := NewHandler(tm)
 
-	// testcase 1
+	// testcase 1 - invalid method
 	req1 := httptest.NewRequest(http.MethodPut, "/api/task", http.NoBody)
 	res1 := httptest.NewRecorder()
 
@@ -28,7 +28,7 @@ func TestHandler_GetAll(t *testing.T) {
 		t.Errorf("Expected status %d but got %d", http.StatusMethodNotAllowed, res1.Code)
 	}
 
-	// testcase 2
+	// testcase 2 - successful
 	req2 := httptest.NewRequest(http.MethodGet, "/api/task", http.NoBody)
 	res2 := httptest.NewRecorder()
 
@@ -53,7 +53,7 @@ func TestHandler_GetAll(t *testing.T) {
 		t.Errorf("Expected: task 1, task 2 got %s, %s", tasks[0].Desc, tasks[1].Desc)
 	}
 
-	// testcase 3
+	// testcase 3 - Write error
 	req3 := httptest.NewRequest(http.MethodGet, "/api/task", http.NoBody)
 	res3 := errWriter{0}
 
@@ -85,7 +85,7 @@ func TestHandler_GetByID(t *testing.T) {
 
 	h := NewHandler(tm)
 
-	// testcase 1
+	// testcase 1 - invalid method
 	req1 := httptest.NewRequest(http.MethodPut, "/api/task/1", http.NoBody)
 	res1 := httptest.NewRecorder()
 
@@ -95,7 +95,7 @@ func TestHandler_GetByID(t *testing.T) {
 		t.Errorf("Expected status %d but got %d", http.StatusMethodNotAllowed, res1.Code)
 	}
 
-	// testcase 2
+	// testcase 2 -
 	req2 := httptest.NewRequest(http.MethodGet, "/api/task/1", http.NoBody)
 	res2 := httptest.NewRecorder()
 
