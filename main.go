@@ -38,14 +38,12 @@ func GenID() func() int {
 
 // AddTask (description string, nextID func() int, mp map[int]*Task)
 // adds new Task by generating id.
-func (t *TaskManager) AddTask(description string) int {
+func (t *TaskManager) AddTask(description string) {
 	id := t.nextID()
 	t1 := Task{Desc: description}
 	t.tasks = append(t.tasks, t1)
 
 	fmt.Println("Task added:", id, "-", description)
-
-	return id
 }
 
 // ListTasks () []string

@@ -102,6 +102,7 @@ func (h *Handler) PutTask(w http.ResponseWriter, req *http.Request) {
 	}
 
 	h.tm.CompleteTask(int(idInt))
+	w.WriteHeader(http.StatusOK)
 }
 
 func (h *Handler) DeleteTask(w http.ResponseWriter, req *http.Request) {
@@ -121,5 +122,7 @@ func (h *Handler) DeleteTask(w http.ResponseWriter, req *http.Request) {
 	err2 := h.tm.DeleteTaskByID(int(idInt))
 	if err2 != nil {
 		w.WriteHeader(http.StatusBadRequest)
+	} else {
+		w.WriteHeader(http.StatusOK)
 	}
 }
