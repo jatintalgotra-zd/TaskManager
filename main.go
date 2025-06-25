@@ -38,14 +38,12 @@ func GenID() func() int {
 
 // AddTask (description string, nextID func() int, mp map[int]*Task)
 // adds new Task by generating id.
-func (t *TaskManager) AddTask(description string) int {
+func (t *TaskManager) AddTask(description string) {
 	id := t.nextID()
 	t1 := Task{Desc: description}
 	t.tasks = append(t.tasks, t1)
 
 	fmt.Println("Task added:", id, "-", description)
-
-	return id
 }
 
 // ListTasks () []string
@@ -85,15 +83,19 @@ func (t *TaskManager) DeleteTaskByID(id int) error {
 
 // CompleteTask (int)
 // marks Task complete by id.
-func (t *TaskManager) CompleteTask(id int) {
+func (t *TaskManager) CompleteTask(id int) error {
 	idx := id - 1
 	if idx >= 0 && idx < len(t.tasks) {
 		fmt.Println("Marking task", id, "as completed...")
 
 		(t.tasks)[idx].Status = true
-	} else {
-		fmt.Println("Invalid task ID for Complete method")
+
+		return nil
 	}
+
+	fmt.Println("Invalid task ID for Complete method")
+
+	return ErrInvalid
 }
 
 func main() {
