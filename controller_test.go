@@ -95,7 +95,7 @@ func TestHandler_GetByID(t *testing.T) {
 		t.Errorf("Expected status %d but got %d", http.StatusMethodNotAllowed, res1.Code)
 	}
 
-	// testcase 2 -
+	// testcase 2 - success
 	req2 := httptest.NewRequest(http.MethodGet, "/api/task/1", http.NoBody)
 	res2 := httptest.NewRecorder()
 
@@ -118,7 +118,7 @@ func TestHandler_GetByID(t *testing.T) {
 		t.Errorf("Expected: task 1 got %s", task1.Desc)
 	}
 
-	// testcase 3
+	// testcase 3 - id marked true
 	tm.ListTasks()[0].Status = true
 	req3 := httptest.NewRequest(http.MethodGet, "/api/task/1", http.NoBody)
 	res3 := httptest.NewRecorder()
@@ -131,7 +131,7 @@ func TestHandler_GetByID(t *testing.T) {
 		t.Errorf("Expected %d got %d", http.StatusBadRequest, res3.Code)
 	}
 
-	// testcase 4
+	// testcase 4 - invalid id - parse error
 	req4 := httptest.NewRequest(http.MethodGet, "/api/task/1", http.NoBody)
 	res4 := httptest.NewRecorder()
 
@@ -143,7 +143,7 @@ func TestHandler_GetByID(t *testing.T) {
 		t.Errorf("Expected %d got %d", http.StatusBadRequest, res4.Code)
 	}
 
-	// testcase 5
+	// testcase 5 - id out of bounds
 	req5 := httptest.NewRequest(http.MethodGet, "/api/task/1", http.NoBody)
 	res5 := httptest.NewRecorder()
 
@@ -155,7 +155,7 @@ func TestHandler_GetByID(t *testing.T) {
 		t.Errorf("Expected %d got %d", http.StatusBadRequest, res5.Code)
 	}
 
-	// testcase 6
+	// testcase 6 - write error
 	req6 := httptest.NewRequest(http.MethodGet, "/api/task/1", http.NoBody)
 	res6 := errWriter{0}
 
@@ -172,7 +172,7 @@ func TestHandler_PostTask(t *testing.T) {
 	tm := NewTaskManager()
 	h := NewHandler(tm)
 
-	// testcase 1
+	// testcase 1 - invalid method
 	req1 := httptest.NewRequest(http.MethodGet, "/api/task", http.NoBody)
 	res1 := httptest.NewRecorder()
 
@@ -182,7 +182,7 @@ func TestHandler_PostTask(t *testing.T) {
 		t.Errorf("Expected status %d but got %d", http.StatusMethodNotAllowed, res1.Code)
 	}
 
-	// testcase 2
+	// testcase 2 - success
 	newTask := Task{Desc: "new task", Status: false}
 
 	reqBytes, err := json.Marshal(newTask)
@@ -201,7 +201,7 @@ func TestHandler_PostTask(t *testing.T) {
 		t.Errorf("Expected %d got %d", http.StatusCreated, res2.Code)
 	}
 
-	// testcase 3
+	// testcase 3 - unmarshal fail
 	newTask2 := []struct {
 		id     int64
 		name   string
@@ -235,7 +235,7 @@ func TestHandler_PostTask(t *testing.T) {
 		t.Errorf("Expected %d got %d", http.StatusBadRequest, res2.Code)
 	}
 
-	// testcase 4
+	// testcase 4 - Read error
 	req4 := httptest.NewRequest(http.MethodPost, "/api/task", errReader(0))
 	res4 := httptest.NewRecorder()
 
@@ -258,7 +258,7 @@ func TestHandler_PutTask(t *testing.T) {
 	tm.AddTask("task 2")
 	h := NewHandler(tm)
 
-	// testcase 1
+	// testcase 1 - invalid method
 	req1 := httptest.NewRequest(http.MethodGet, "/api/task/1", http.NoBody)
 	res1 := httptest.NewRecorder()
 
@@ -268,7 +268,7 @@ func TestHandler_PutTask(t *testing.T) {
 		t.Errorf("Expected status %d but got %d", http.StatusMethodNotAllowed, res1.Code)
 	}
 
-	// testcase 2
+	// testcase 2 - invalid id - parse error
 	req2 := httptest.NewRequest(http.MethodPut, "/api/task/1", http.NoBody)
 	res2 := httptest.NewRecorder()
 
@@ -280,7 +280,7 @@ func TestHandler_PutTask(t *testing.T) {
 		t.Errorf("Expected %d got %d", http.StatusBadRequest, res2.Code)
 	}
 
-	// testcase 3
+	// testcase 3 - success
 	req3 := httptest.NewRequest(http.MethodPut, "/api/task/1", http.NoBody)
 	res3 := httptest.NewRecorder()
 
@@ -296,7 +296,7 @@ func TestHandler_PutTask(t *testing.T) {
 		t.Errorf("Expected status true got %v", tm.ListTasks()[1].Status)
 	}
 
-	// testcase 4
+	// testcase 4 - id out of bounds
 	req4 := httptest.NewRequest(http.MethodPut, "/api/task/1", http.NoBody)
 	res4 := httptest.NewRecorder()
 
@@ -315,7 +315,7 @@ func TestHandler_DeleteTask(t *testing.T) {
 	tm.AddTask("task 2")
 	h := NewHandler(tm)
 
-	// testcase 1
+	// testcase 1 - invalid method
 	req1 := httptest.NewRequest(http.MethodGet, "/api/task/1", http.NoBody)
 	res1 := httptest.NewRecorder()
 
@@ -325,7 +325,7 @@ func TestHandler_DeleteTask(t *testing.T) {
 		t.Errorf("Expected status %d but got %d", http.StatusMethodNotAllowed, res1.Code)
 	}
 
-	// testcase 2
+	// testcase 2 - id parse error
 	req2 := httptest.NewRequest(http.MethodDelete, "/api/task/1", http.NoBody)
 	res2 := httptest.NewRecorder()
 
@@ -337,7 +337,7 @@ func TestHandler_DeleteTask(t *testing.T) {
 		t.Errorf("Expected %d got %d", http.StatusBadRequest, res2.Code)
 	}
 
-	// testcase 3
+	// testcase 3 - id out of bounds
 	req3 := httptest.NewRequest(http.MethodDelete, "/api/task/1", http.NoBody)
 	res3 := httptest.NewRecorder()
 
@@ -349,7 +349,7 @@ func TestHandler_DeleteTask(t *testing.T) {
 		t.Errorf("Expected %d got %d", http.StatusBadRequest, res3.Code)
 	}
 
-	// testcase 4
+	// testcase 4 - success
 	req4 := httptest.NewRequest(http.MethodDelete, "/api/task/1", http.NoBody)
 	res4 := httptest.NewRecorder()
 
