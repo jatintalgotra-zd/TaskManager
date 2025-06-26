@@ -4,9 +4,10 @@ import (
 	"database/sql"
 	"errors"
 	"fmt"
-	_ "github.com/go-sql-driver/mysql"
 	"net/http"
 	"time"
+
+	_ "github.com/go-sql-driver/mysql"
 )
 
 var ErrInvalid = errors.New("invalid task id")
@@ -36,7 +37,6 @@ type Task struct {
 // AddTask (description string, nextID func() int, mp map[int]*Task)
 // adds new Task by generating id.
 func (t *TaskManager) AddTask(description string) int {
-
 	result, err := t.db.Exec("INSERT INTO tasks (description, status) VALUES ( ?, ?)", description, false)
 	if err != nil {
 		fmt.Println("Failed to insert task: ", err)

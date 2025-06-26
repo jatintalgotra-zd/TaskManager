@@ -85,12 +85,13 @@ func (h *Handler) PostTask(w http.ResponseWriter, req *http.Request) {
 		}
 
 		id := h.tm.AddTask(task.Desc)
+
 		w.WriteHeader(http.StatusCreated)
+
 		idStr := strconv.Itoa(id)
 		if _, err3 := w.Write([]byte(idStr)); err3 != nil {
 			w.WriteHeader(http.StatusInternalServerError)
 		}
-
 	}
 }
 
