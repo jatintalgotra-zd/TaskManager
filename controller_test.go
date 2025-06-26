@@ -13,8 +13,6 @@ var errTest = errors.New("test error")
 
 func TestHandler_GetAll(t *testing.T) {
 	tm := NewTaskManager()
-	tm.AddTask("task 1")
-	tm.AddTask("task 2")
 
 	h := NewHandler(tm)
 
@@ -38,7 +36,7 @@ func TestHandler_GetAll(t *testing.T) {
 		t.Errorf("Expected status %d but got %d", http.StatusOK, res2.Code)
 	}
 
-	var tasks []Task
+	var tasks []main.Task
 
 	err := json.Unmarshal(res2.Body.Bytes(), &tasks)
 	if err != nil {
@@ -80,8 +78,6 @@ func (e *errWriter) WriteHeader(statusCode int) {
 
 func TestHandler_GetByID(t *testing.T) {
 	tm := NewTaskManager()
-	tm.AddTask("task 1")
-	tm.AddTask("task 2")
 
 	h := NewHandler(tm)
 
@@ -107,7 +103,7 @@ func TestHandler_GetByID(t *testing.T) {
 		t.Errorf("Expected status %d but got %d", http.StatusOK, res2.Code)
 	}
 
-	var task1 Task
+	var task1 main.Task
 
 	err := json.Unmarshal(res2.Body.Bytes(), &task1)
 	if err != nil {
@@ -116,19 +112,6 @@ func TestHandler_GetByID(t *testing.T) {
 
 	if task1.Desc != "task 1" {
 		t.Errorf("Expected: task 1 got %s", task1.Desc)
-	}
-
-	// testcase 3 - id marked true
-	tm.ListTasks()[0].Status = true
-	req3 := httptest.NewRequest(http.MethodGet, "/api/task/1", http.NoBody)
-	res3 := httptest.NewRecorder()
-
-	req3.SetPathValue("id", "1")
-
-	h.GetByID(res3, req3)
-
-	if res3.Code != http.StatusBadRequest {
-		t.Errorf("Expected %d got %d", http.StatusBadRequest, res3.Code)
 	}
 
 	// testcase 4 - invalid id - parse error
@@ -183,7 +166,7 @@ func TestHandler_PostTask(t *testing.T) {
 	}
 
 	// testcase 2 - success
-	newTask := Task{Desc: "new task", Status: false}
+	newTask := main.Task{Desc: "new task", Status: false}
 
 	reqBytes, err := json.Marshal(newTask)
 	if err != nil {
@@ -254,8 +237,6 @@ func (errReader) Read(_ []byte) (n int, err error) {
 
 func TestHandler_PutTask(t *testing.T) {
 	tm := NewTaskManager()
-	tm.AddTask("task 1")
-	tm.AddTask("task 2")
 	h := NewHandler(tm)
 
 	// testcase 1 - invalid method
@@ -284,7 +265,7 @@ func TestHandler_PutTask(t *testing.T) {
 	req3 := httptest.NewRequest(http.MethodPut, "/api/task/1", http.NoBody)
 	res3 := httptest.NewRecorder()
 
-	req3.SetPathValue("id", "1")
+	req3.SetPathValue("id", "2")
 
 	h.PutTask(res3, req3)
 
@@ -311,8 +292,6 @@ func TestHandler_PutTask(t *testing.T) {
 
 func TestHandler_DeleteTask(t *testing.T) {
 	tm := NewTaskManager()
-	tm.AddTask("task 1")
-	tm.AddTask("task 2")
 	h := NewHandler(tm)
 
 	// testcase 1 - invalid method

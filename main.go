@@ -1,8 +1,10 @@
 package main
 
 import (
+	"database/sql"
 	"errors"
 	"fmt"
+	_ "github.com/go-sql-driver/mysql"
 	"net/http"
 	"time"
 )
@@ -10,73 +12,109 @@ import (
 var ErrInvalid = errors.New("invalid task id")
 
 type TaskManager struct {
-	tasks  []Task
-	nextID func() int
+	db *sql.DB
 }
 
 func NewTaskManager() *TaskManager {
-	return &TaskManager{tasks: make([]Task, 0), nextID: GenID()}
+	db, err := sql.Open("mysql", "root:root123@tcp(localhost:3306)/test_db")
+	if err != nil {
+		fmt.Println("Failed to connect to mysql")
+		return nil
+	}
+
+	return &TaskManager{db: db}
 }
 
 // Task struct
 // added fields for description and status.
 type Task struct {
+	ID     int    `json:"id"`
 	Desc   string `json:"desc"`
 	Status bool   `json:"status"`
 }
 
-// GenID () func() int
-// returns function to get next id.
-func GenID() func() int {
-	id := 0
-
-	return func() int {
-		id++
-		return id
-	}
-}
-
 // AddTask (description string, nextID func() int, mp map[int]*Task)
 // adds new Task by generating id.
-func (t *TaskManager) AddTask(description string) {
-	id := t.nextID()
-	t1 := Task{Desc: description}
-	t.tasks = append(t.tasks, t1)
+func (t *TaskManager) AddTask(description string) int {
+
+	result, err := t.db.Exec("INSERT INTO tasks (description, status) VALUES ( ?, ?)", description, false)
+	if err != nil {
+		fmt.Println("Failed to insert task: ", err)
+		return 0
+	}
+
+	id, err2 := result.LastInsertId()
+	if err2 != nil {
+		fmt.Println("Failed to retrieve last id: ", err2)
+		return 0
+	}
 
 	fmt.Println("Task added:", id, "-", description)
+
+	return int(id)
 }
 
 // ListTasks () []string
 // prints all pending tasks.
 func (t *TaskManager) ListTasks() []Task {
-	return t.tasks
+	taskList := make([]Task, 0)
+
+	rows, err := t.db.Query("SELECT id, description, status FROM tasks")
+	if err != nil {
+		fmt.Println("Failed to list tasks: ", err)
+		return nil
+	}
+
+	if rows.Err() != nil {
+		fmt.Println("Failed to list tasks: ", rows.Err())
+	}
+
+	for rows.Next() {
+		var task Task
+
+		err2 := rows.Scan(&task.ID, &task.Desc, &task.Status)
+		if err2 != nil {
+			fmt.Println("Failed to list tasks: ", err2)
+			continue
+		}
+
+		taskList = append(taskList, task)
+	}
+
+	return taskList
 }
 
 func (t *TaskManager) ListTaskByID(id int) (Task, error) {
-	var err error
+	var task Task
 
-	idx := id - 1
-	if idx < 0 || idx >= len(t.tasks) {
-		err = ErrInvalid
+	row := t.db.QueryRow("SELECT id, description, status FROM tasks WHERE id = ?", id)
+
+	err := row.Scan(&task.ID, &task.Desc, &task.Status)
+	if err != nil {
+		fmt.Println("Failed to list tasks: ", err)
+
 		return Task{}, err
 	}
 
-	if t.tasks[idx].Status {
-		return Task{}, ErrInvalid
-	}
-
-	return t.tasks[idx], nil
+	return task, nil
 }
 
 func (t *TaskManager) DeleteTaskByID(id int) error {
-	idx := id - 1
-	if idx < 0 || idx >= len(t.tasks) {
-		fmt.Println("invalid task id for Delete method")
-		return ErrInvalid
+	result, err := t.db.Exec("DELETE FROM tasks WHERE id = ?", id)
+	if err != nil {
+		fmt.Println("Failed to delete task: ", err)
+		return err
 	}
 
-	t.tasks[idx] = t.tasks[len(t.tasks)-1]
-	t.tasks = t.tasks[:len(t.tasks)-1]
+	affected, err2 := result.RowsAffected()
+	if err2 != nil {
+		fmt.Println("Failed to delete task: ", err2)
+		return err2
+	}
+
+	if affected == 0 {
+		return ErrInvalid
+	}
 
 	return nil
 }
@@ -84,18 +122,23 @@ func (t *TaskManager) DeleteTaskByID(id int) error {
 // CompleteTask (int)
 // marks Task complete by id.
 func (t *TaskManager) CompleteTask(id int) error {
-	idx := id - 1
-	if idx >= 0 && idx < len(t.tasks) {
-		fmt.Println("Marking task", id, "as completed...")
-
-		(t.tasks)[idx].Status = true
-
-		return nil
+	res, err := t.db.Exec("UPDATE tasks SET status = true WHERE id = ? AND status = false", id)
+	if err != nil {
+		fmt.Println("Failed to complete task: ", err)
+		return err
 	}
 
-	fmt.Println("Invalid task ID for Complete method")
+	affected, err2 := res.RowsAffected()
+	if err2 != nil {
+		fmt.Println("Failed to complete task: ", err2)
+		return err2
+	}
 
-	return ErrInvalid
+	if affected == 0 {
+		return ErrInvalid
+	}
+
+	return nil
 }
 
 func main() {
