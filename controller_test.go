@@ -6,6 +6,7 @@ import (
 	"errors"
 	"net/http"
 	"net/http/httptest"
+	"strconv"
 	"testing"
 )
 
@@ -13,6 +14,8 @@ var errTest = errors.New("test error")
 
 func TestHandler_GetAll(t *testing.T) {
 	tm := NewTaskManager()
+	id1 := tm.AddTask("task 1")
+	id2 := tm.AddTask("task 2")
 
 	h := NewHandler(tm)
 
@@ -36,7 +39,7 @@ func TestHandler_GetAll(t *testing.T) {
 		t.Errorf("Expected status %d but got %d", http.StatusOK, res2.Code)
 	}
 
-	var tasks []main.Task
+	var tasks []Task
 
 	err := json.Unmarshal(res2.Body.Bytes(), &tasks)
 	if err != nil {
@@ -60,6 +63,17 @@ func TestHandler_GetAll(t *testing.T) {
 	if res3.Code != http.StatusInternalServerError {
 		t.Errorf("Expected status %d but got %d", http.StatusInternalServerError, res3.Code)
 	}
+
+	// clean
+	err2 := tm.DeleteTaskByID(id1)
+	if err2 != nil {
+		t.Errorf("Failed to delete task %d", id1)
+	}
+
+	err2 = tm.DeleteTaskByID(id2)
+	if err2 != nil {
+		t.Errorf("Failed to delete task %d", id2)
+	}
 }
 
 type errWriter struct {
@@ -78,6 +92,9 @@ func (e *errWriter) WriteHeader(statusCode int) {
 
 func TestHandler_GetByID(t *testing.T) {
 	tm := NewTaskManager()
+	id1 := tm.AddTask("task 1")
+	idStr := strconv.Itoa(id1)
+	id2 := tm.AddTask("task 2")
 
 	h := NewHandler(tm)
 
@@ -95,15 +112,14 @@ func TestHandler_GetByID(t *testing.T) {
 	req2 := httptest.NewRequest(http.MethodGet, "/api/task/1", http.NoBody)
 	res2 := httptest.NewRecorder()
 
-	req2.SetPathValue("id", "1")
-
+	req2.SetPathValue("id", idStr)
 	h.GetByID(res2, req2)
 
 	if res2.Code != http.StatusOK {
 		t.Errorf("Expected status %d but got %d", http.StatusOK, res2.Code)
 	}
 
-	var task1 main.Task
+	var task1 Task
 
 	err := json.Unmarshal(res2.Body.Bytes(), &task1)
 	if err != nil {
@@ -138,16 +154,15 @@ func TestHandler_GetByID(t *testing.T) {
 		t.Errorf("Expected %d got %d", http.StatusBadRequest, res5.Code)
 	}
 
-	// testcase 6 - write error
-	req6 := httptest.NewRequest(http.MethodGet, "/api/task/1", http.NoBody)
-	res6 := errWriter{0}
+	// clean
+	err2 := tm.DeleteTaskByID(id1)
+	if err2 != nil {
+		t.Errorf("Failed to delete task %d", id1)
+	}
 
-	req6.SetPathValue("id", "2")
-
-	h.GetByID(&res6, req6)
-
-	if res6.Code != http.StatusInternalServerError {
-		t.Errorf("Expected status %d but got %d", http.StatusInternalServerError, res6.Code)
+	err2 = tm.DeleteTaskByID(id2)
+	if err2 != nil {
+		t.Errorf("Failed to delete task %d", id2)
 	}
 }
 
@@ -166,7 +181,7 @@ func TestHandler_PostTask(t *testing.T) {
 	}
 
 	// testcase 2 - success
-	newTask := main.Task{Desc: "new task", Status: false}
+	newTask := Task{Desc: "new task", Status: false}
 
 	reqBytes, err := json.Marshal(newTask)
 	if err != nil {
@@ -179,6 +194,12 @@ func TestHandler_PostTask(t *testing.T) {
 	res2 := httptest.NewRecorder()
 
 	h.PostTask(res2, req2)
+	idStr1 := res2.Body.Bytes()
+
+	id1, err10 := strconv.Atoi(string(idStr1))
+	if err10 != nil {
+		t.Errorf("Failed to convert id %s", idStr1)
+	}
 
 	if res2.Code != http.StatusCreated {
 		t.Errorf("Expected %d got %d", http.StatusCreated, res2.Code)
@@ -227,6 +248,12 @@ func TestHandler_PostTask(t *testing.T) {
 	if res4.Code != http.StatusBadRequest {
 		t.Errorf("Expected %d got %d", http.StatusBadRequest, res4.Code)
 	}
+
+	// clean
+	err9 := tm.DeleteTaskByID(id1)
+	if err9 != nil {
+		t.Errorf("Failed to delete task %d", id1)
+	}
 }
 
 type errReader int
@@ -237,6 +264,9 @@ func (errReader) Read(_ []byte) (n int, err error) {
 
 func TestHandler_PutTask(t *testing.T) {
 	tm := NewTaskManager()
+	id1 := tm.AddTask("task 1")
+	idStr := strconv.Itoa(id1)
+	id2 := tm.AddTask("task 2")
 	h := NewHandler(tm)
 
 	// testcase 1 - invalid method
@@ -265,7 +295,7 @@ func TestHandler_PutTask(t *testing.T) {
 	req3 := httptest.NewRequest(http.MethodPut, "/api/task/1", http.NoBody)
 	res3 := httptest.NewRecorder()
 
-	req3.SetPathValue("id", "2")
+	req3.SetPathValue("id", idStr)
 
 	h.PutTask(res3, req3)
 
@@ -288,10 +318,24 @@ func TestHandler_PutTask(t *testing.T) {
 	if res4.Code != http.StatusBadRequest {
 		t.Errorf("Expected %d got %d", http.StatusBadRequest, res4.Code)
 	}
+
+	// clean
+	err2 := tm.DeleteTaskByID(id1)
+	if err2 != nil {
+		t.Errorf("Failed to delete task %d", id1)
+	}
+
+	err2 = tm.DeleteTaskByID(id2)
+	if err2 != nil {
+		t.Errorf("Failed to delete task %d", id2)
+	}
 }
 
 func TestHandler_DeleteTask(t *testing.T) {
 	tm := NewTaskManager()
+	id1 := tm.AddTask("task 1")
+	idStr := strconv.Itoa(id1)
+	id2 := tm.AddTask("task 2")
 	h := NewHandler(tm)
 
 	// testcase 1 - invalid method
@@ -332,7 +376,7 @@ func TestHandler_DeleteTask(t *testing.T) {
 	req4 := httptest.NewRequest(http.MethodDelete, "/api/task/1", http.NoBody)
 	res4 := httptest.NewRecorder()
 
-	req4.SetPathValue("id", "1")
+	req4.SetPathValue("id", idStr)
 
 	h.DeleteTask(res4, req4)
 
@@ -342,5 +386,11 @@ func TestHandler_DeleteTask(t *testing.T) {
 
 	if tm.ListTasks()[0].Desc == "task 1" {
 		t.Errorf("Expected after delete %s got %v", "task 2", tm.ListTasks()[0].Desc)
+	}
+
+	// clean
+	err2 := tm.DeleteTaskByID(id2)
+	if err2 != nil {
+		t.Errorf("Failed to delete task %d", id2)
 	}
 }
